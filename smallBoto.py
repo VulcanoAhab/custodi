@@ -4,7 +4,7 @@ from boto3.session import Session
 class S3Bucket:
     """
     """
-    _conn=None
+    _s3=None
 
     @classmethod
     def basic_conn(cls, access_key, secret_key, use_ssl=True):
@@ -12,16 +12,16 @@ class S3Bucket:
         """
         session=Session(aws_access_key_id=access_key,
                         aws_secret_access_key=secret_key)
-        self._s3=session.resource("s3", use_ssl=use_ssl)
+        cls._s3=session.resource("s3", use_ssl=use_ssl)
 
     def __init__(self, bucketName):
         """
         """
         self._btName=bucketName
-        if (not self._s3.Bucket(self.bucketName)
+        if (not self._s3.Bucket(self._btName)
             in list(self._s3.buckets.all())):
             self._s3.create_bucket(Bucket=self._btName)
-        self._bt=self._s3.Bucket(self.bucketName)
+        self._bt=self._s3.Bucket(self._btName)
         self._files=self._bt.objects.all()
 
     @property
