@@ -1,5 +1,5 @@
-import boto
-import boto.s3.connection
+from boto3.session import Session
+
 
 class S3Bucket:
     """
@@ -7,34 +7,34 @@ class S3Bucket:
     _conn=None
 
     @classmethod
-    def basic_conn(cls, host, access_key, secret_key):
+    def basic_conn(cls, access_key, secret_key, use_ssl=True):
         """
         """
-        cls._conn=boto.connect_s3(
-            aws_access_key_id = access_key,
-            aws_secret_access_key = secret_key,
-            host = host,
-            calling_format = boto.s3.connection.OrdinaryCallingFormat())
-
+        session=Session(aws_access_key_id=access_key,
+                        aws_secret_access_key=secret_key)
+        self._s3=session.resource("s3", use_ssl=use_ssl)
 
     def __init__(self, bucketName):
         """
         """
         self._btName=bucketName
-        self._bt=self._conn.get_bucket(self._btName)
-        self._files=(k.name for k in self._bt.list())
+        if (not self._s3.Bucket(self.bucketName)
+            in list(self._s3.buckets.all())):
+            self._s3.create_bucket(Bucket=self._btName)
+        self._bt=self._s3.Bucket(self.bucketName)
+        self._files=self._bt.objects.all()
+
+    @property
+    def size(self):
+        """
+        """
+        return self._bt.size
 
     @property
     def files(self):
         """
         """
-        return list(self._files)
-
-    @property
-    def iterFiles(self):
-        """
-        """
-        return self._files
+        return [obj.key for obj in self._files]
 
     @property
     def deleteBucket(self):
@@ -45,27 +45,29 @@ class S3Bucket:
     def getFilesFromDir(self, dirPath):
         """
         """
-        return self._bt.list(prefix=dirPath)
+        return self._bt.objects.filter(Prefix=dirPath)
 
     def getFile(self, key):
         """
         """
-        return self._bt.get_key(key)
+        return self._bt.Object(key).get()
 
     def deleteFile(self, key):
         """
         """
-        self._bt.delete_key(key)
+        self._bt.Object(key).delete()
 
     def deleteFilesFromDir(self, dirPath):
         """
         """
-        for key in self._bt.list(prefix=dirPath):key.delete()
+        self._bt.delete_objects()
 
     def transferToLocalFile(self, key, localFile):
         """
         """
-        content=self._bt.get_key(key)
-        if not content:
-            print("[-] No content to save locally")
-        content.get_contents_to_filename(localFile)
+        self._bt.download_file(key, localFile)
+
+    def uploadFileData(self, fileData, key):
+        """
+        """
+        self._bt.upload_fileobj(fileData, key)
