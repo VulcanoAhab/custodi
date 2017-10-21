@@ -14,7 +14,7 @@ class S3Bucket:
                         aws_secret_access_key=secret_key)
         cls._s3=session.resource("s3", use_ssl=use_ssl)
 
-    def __init__(self, bucketName):
+    def __init__(self, bucketName, basePath=None):
         """
         """
         self._btName=bucketName
@@ -22,7 +22,11 @@ class S3Bucket:
             in list(self._s3.buckets.all())):
             self._s3.create_bucket(Bucket=self._btName)
         self._bt=self._s3.Bucket(self._btName)
-        self._files=self._bt.objects.all()
+        if not basePath:
+            self._files=self._bt.objects.all()
+        else:
+            self._files=self.getFilesFromDir(basePath)
+        self._filesIter=(obj.key for obj in self._files)
 
     @property
     def size(self):
@@ -35,6 +39,13 @@ class S3Bucket:
         """
         """
         return [obj.key for obj in self._files]
+
+    @property
+    def nextFile(self):
+        """
+        """
+        return next(self._filesIter)
+
 
     @property
     def deleteBucket(self):
