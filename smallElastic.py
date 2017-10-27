@@ -59,14 +59,14 @@ class Basics:
                                   body=query, scroll=scrollTime)
         scrollIt=firstHit["_scroll_id"]
         #send first hit
-        yield firstHit
+        for doc in firstHit["hits"]["hits"]:yield doc
         #iter the rest
         while True:
             try:
                 manyHits=self._conn.scroll(scroll_id=scrollIt,
                                            scroll=scrollTime)
                 if not len(manyHits["hits"]["hits"]):break
-                yield manyHits
+                for doc in manyHits["hits"]["hits"]:yield doc
                 scrollIt=manyHits["_scroll_id"]
             except:
                 break
