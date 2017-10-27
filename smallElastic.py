@@ -68,7 +68,8 @@ class Basics:
                 if not len(manyHits["hits"]["hits"]):break
                 for doc in manyHits["hits"]["hits"]:yield doc
                 scrollIt=manyHits["_scroll_id"]
-            except:
+            except Exception as e:
+                print("[SCROLL FAIL] :: {}".format(e))
                 break
 
 
