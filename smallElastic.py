@@ -50,6 +50,29 @@ class Basics:
         return cls._conn.search(index=index, doc_type=docType, body=query)
 
     @classmethod
+    def scroll(cls, query, index=None, docType=None, scrollTime=None):
+        """
+        """
+        if not scrollTime:
+            scrollTime="1m"
+        firstHit=cls._conn.search(index=index, doc_type=docType,
+                                  body=query, scroll=scrollTime)
+        scrollIt=firstHit["_scroll_id"]
+        #send first hit
+        yield firstHit
+        #iter the rest
+        while True:
+            try:
+                manyHits=self._conn.scroll(scroll_id=scrollIt,
+                                           scroll=scrollTime)
+                if not len(manyHits["hits"]["hits"]):break
+                yield manyHits
+                scrollIt=manyHits["_scroll_id"]
+            except:
+                break
+
+
+    @classmethod
     def delete(cls, doc_id, index=None, docType=None):
         """
         """
