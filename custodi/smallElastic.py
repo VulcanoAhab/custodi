@@ -122,7 +122,7 @@ class Basics:
                                           body={'query':{"match_all":{}}})
 
     @classmethod
-    def getAllbyIndex(cls, index=None):
+    def getAllbyIndex(cls, index):
         """
         """
         _all = cls._conn.search(index=index, body={"query": {"match_all": {}}})
@@ -133,6 +133,23 @@ class Basics:
             if _count >=_total:break
             _all = cls._conn.search(index=index,
                                      body={"query": {"match_all": {}}},
+                                     from_=_count+1)
+
+            _snaps=_all['hits']['hits']
+            if not _snaps:break
+
+    @classmethod
+    def getAllbyQuery(cls, index, query):
+        """
+        """
+        _all = cls._conn.search(index=index, body=query)
+        _total=_all['hits']['total']
+        _count=0
+        while True:
+            for doc in _all['hits']['hits']:yield doc
+            if _count >=_total:break
+            _all = cls._conn.search(index=index,
+                                     body=query,
                                      from_=_count+1)
 
             _snaps=_all['hits']['hits']
