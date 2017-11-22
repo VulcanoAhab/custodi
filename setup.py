@@ -10,5 +10,6 @@ setup(
     install_requires=[
         "boto3==1.4.7",
         "elasticsearch==5.4.0",
+        "aws-requests-auth==0.4.1"
         ]
 )
