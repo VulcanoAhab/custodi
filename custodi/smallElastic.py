@@ -1,4 +1,5 @@
-from elasticsearch import Elasticsearch
+from aws_requests_auth.aws_auth import AWSRequestsAuth
+from elasticsearch import Elasticsearch,RequestsHttpConnection
 
 class Basics:
     """
@@ -19,7 +20,33 @@ class Basics:
         ------------------
         elasticsearch documentation
         """
-        cls._conn=Elasticsearch(*args, **kwargs)
+        try:
+            cls._conn=Elasticsearch(*args, **kwargs)
+        except Exception as e:
+            print("[FAIL TO CONNECT TO ES] :: {}".format(e))
+            exit(3)
+
+    @classmethod
+    def setAWsConn(cls, aws_key, aws_secret,
+                   esEndPoint, esRegion, esService):
+        """
+        """
+        try:
+            auth=AWSRequestsAuth(aws_access_key=aws_key,
+                       aws_secret_access_key=aws_secret,
+                       aws_host=esEndPoint,
+                       aws_region=esRegion,
+                       aws_service=esService)
+            cls._conn=Elasticsearch(
+                            hosts=[{"host": esEndPoint, "port": 443}],
+                            use_ssl=True,
+                            verify_certs=True,
+                            connection_class=RequestsHttpConnection,
+                            http_auth=auth)
+        except Exception as e:
+            print("[FAIL TO CONNECT TO ES] :: {}".format(esEndPoint))
+            print(e)
+            exit(3)
 
     @classmethod
     def setIndex(cls, indexString):

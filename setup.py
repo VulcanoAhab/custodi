@@ -8,7 +8,6 @@ setup(
     url="https://github.com/VulcanoAhab/custodi.git",
     description="Simple high level API's for Elastic Search, S3 and others",
     install_requires=[
-
         "boto3==1.4.7",
         "elasticsearch==5.4.0",
         ]
