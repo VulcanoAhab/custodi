@@ -61,6 +61,14 @@ class Basics:
         cls._docType=docTypeString
 
     @classmethod
+    def createIndex(cls, *args, **kwargs):
+        """
+        """
+        #ignore 400 :: if already exists
+        if "ignore" not in kwargs:kwargs.update({"ignore":400})
+        cls.indices.create(*args, **kwargs) 
+
+    @classmethod
     def save(cls, doc_id, doc, index=None, docType=None):
         """
         """
@@ -125,32 +133,4 @@ class Basics:
     def getAllbyIndex(cls, index):
         """
         """
-        _all = cls._conn.search(index=index, body={"query": {"match_all": {}}})
-        _total=_all['hits']['total']
-        _count=0
-        while True:
-            for doc in _all['hits']['hits']:yield doc
-            if _count >=_total:break
-            _all = cls._conn.search(index=index,
-                                     body={"query": {"match_all": {}}},
-                                     from_=_count+1)
-
-            _snaps=_all['hits']['hits']
-            if not _snaps:break
-
-    @classmethod
-    def getAllbyQuery(cls, index, query):
-        """
-        """
-        _all = cls._conn.search(index=index, body=query)
-        _total=_all['hits']['total']
-        _count=0
-        while True:
-            for doc in _all['hits']['hits']:yield doc
-            if _count >=_total:break
-            _all = cls._conn.search(index=index,
-                                     body=query,
-                                     from_=_count+1)
-
-            _snaps=_all['hits']['hits']
-            if not _snaps:break
+        cls.scroll({"query":{"match_all":{}}}, index=index) 
