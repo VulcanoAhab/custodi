@@ -78,7 +78,12 @@ class S3Bucket:
         """
         self._bt.download_file(key, localFile)
 
-    def uploadFileData(self, fileData, key):
+    def uploadFile(self, fileData, key):
         """
         """
         self._bt.upload_fileobj(fileData, key)
+
+    def uploadData(self, blob, key):
+        """
+        """
+        self._bt.put_object(Key=key, Body=blob)
