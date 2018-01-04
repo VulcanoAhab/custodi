@@ -13,15 +13,16 @@ class S3Bucket:
         session=Session(aws_access_key_id=access_key,
                         aws_secret_access_key=secret_key)
         cls._s3=session.resource("s3", use_ssl=use_ssl)
+        cls._bucketsList=list(cls._s3.buckets.all())
 
     def __init__(self, bucketName, basePath=None):
         """
         """
         self._btName=bucketName
-        if (not self._s3.Bucket(self._btName)
-            in list(self._s3.buckets.all())):
-            self._s3.create_bucket(Bucket=self._btName)
         self._bt=self._s3.Bucket(self._btName)
+        if not self._bt in self._bucketsList:
+            self._s3.create_bucket(Bucket=self._btName)
+            self._bucketsList=list(self._s3.buckets.all())
         if not basePath:
             self._files=self._bt.objects.all()
         else:
