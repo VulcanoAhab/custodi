@@ -1,10 +1,9 @@
 from boto3.session import Session
 
-
-class S3Bucket:
+class BasicSession:
     """
     """
-    _s3=None
+    _resource=None
 
     @classmethod
     def basic_conn(cls, access_key, secret_key, use_ssl=True):
@@ -12,16 +11,24 @@ class S3Bucket:
         """
         session=Session(aws_access_key_id=access_key,
                         aws_secret_access_key=secret_key)
-        cls._s3=session.resource("s3", use_ssl=use_ssl)
+        setattr(cls, cls._resource, session.resource(cls._resource, 
+                                                    use_ssl=use_ssl, 
+                                                    region_name="us-west-2"))
+
+
+class S3Bucket(BasicSession):
+    """
+    """
+    _resource="s3"
 
     def __init__(self, bucketName, basePath=None):
         """
         """
         self._btName=bucketName
-        if (not self._s3.Bucket(self._btName)
-            in list(self._s3.buckets.all())):
-            self._s3.create_bucket(Bucket=self._btName)
-        self._bt=self._s3.Bucket(self._btName)
+        if (not self.s3.Bucket(self._btName)
+            in list(self.s3.buckets.all())):
+            self.s3.create_bucket(Bucket=self._btName)
+        self._bt=self.s3.Bucket(self._btName)
         if not basePath:
             self._files=self._bt.objects.all()
         else:
@@ -87,3 +94,21 @@ class S3Bucket:
         """
         """
         self._bt.put_object(Key=key, Body=blob)
+
+
+
+class EC2(BasicSession):
+    """
+    """
+    _resource="ec2"
+
+    def exists():
+        """
+        """
+        pass
+    
+    def create():
+        """
+        """
+        pass
+    
