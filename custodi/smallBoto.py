@@ -101,18 +101,41 @@ class S3Bucket(BasicSession):
 
 
 
-class EC2(BasicSession):
+class Ec2ByName(BasicSession):
     """
     """
     _resource="ec2"
-
-    def exists():
-        """
-        """
-        pass
     
-    def create():
+    def __init__(self, instance_name):
         """
         """
-        pass
+        self.instance_name=instance_name
+
+    def exists(self):
+        """
+        """
+        filters = [{  
+            "Name": "tag:Name",
+            "Values": [self.instance_name,]
+         }]
+        reservations = self.ec2.describe_instances(Filters=filters)  
+        for reservation in (response["Reservations"]:
+            for instance in reservation["Instances"]:
+                tags=intance["Tags"]
+                for tagDict in tags:
+                    if tagDict["Key"]!="Name":continue
+                    if tagDict["Value"]!=instance_name:continue
+                    return True
+        return False
+
+    def create_instance(self, **kwargs):
+        """
+        image i.e. ami-aa5ebdd2
+
+        """
+        instances = self.ec2.create_instances(**kwargs)
+        instance=instances[0]
+        instance.wait_until_running() 
+        instance.add_tag("Name", self.instance_name)
+        return instance
     
