@@ -1,19 +1,31 @@
 from boto3.session import Session
+from botocore.client import ClientError
+
 
 class BasicSession:
     """
     """
     _resource=None
+    _region_name="us-west-2"
 
     @classmethod
-    def basic_conn(cls, access_key, secret_key, use_ssl=True):
+    def set_region(cls, region_name):
         """
         """
+        cls._region_name=region_name
+
+    @classmethod
+    def basic_conn(cls, access_key, secret_key, 
+                        use_ssl=True, region_name=None):
+        """
+        """
+        if not region_name:
+            region_name=cls._region_name
         session=Session(aws_access_key_id=access_key,
                         aws_secret_access_key=secret_key)
-        setattr(cls, cls._resource, session.resource(cls._resource, 
+        setattr(cls, cls._resource, session.client(cls._resource, 
                                                     use_ssl=use_ssl, 
-                                                    region_name="us-west-2"))
+                                                    region_name=region_name))
 
 
 class S3Bucket(BasicSession):
@@ -24,76 +36,68 @@ class S3Bucket(BasicSession):
     def __init__(self, bucketName, basePath=None):
         """
         """
-        self._btName=bucketName
-        if (not self.s3.Bucket(self._btName)
-            in list(self.s3.buckets.all())):
-            self.s3.create_bucket(Bucket=self._btName)
-        self._bt=self.s3.Bucket(self._btName)
+        self._bucketName=bucketName
+        try:
+            self.s3.head_bucket(Bucket=self._bucketName)
+        except ClientError:
+            self.s3.create_bucket(Bucket=self._bucketName)
+        paginator = cls.s3.get_paginator("list_objects_v2")
         if not basePath:
-            self._files=self._bt.objects.all()
+        
+            pages = paginator.paginate(Bucket=self._bucketName)
         else:
-            self._files=self.getFilesFromDir(basePath)
-        self._filesIter=(obj.key for obj in self._files)
-
-    @property
-    def size(self):
-        """
-        """
-        return self._bt.size
-
+            pages = paginator.paginate(Bucket=self._bucketName, Prefix=basePath)
+        self._files=(item["Key"] for item in pages.search("Contents"))
+        
     @property
     def files(self):
         """
         """
-        return [obj.key for obj in self._files]
+        return self._files
 
     @property
     def nextFile(self):
         """
         """
-        return next(self._filesIter)
-
+        return next(self._files)
 
     @property
     def deleteBucket(self):
         """
         """
-        self._bt.delete()
+        self.s3.delete_bucket(Bucket=self._bucketName)
 
     def getFilesFromDir(self, dirPath):
         """
         """
-        return self._bt.objects.filter(Prefix=dirPath)
+        return self.s3.list_objects(Prefix=dirPath)
 
     def getFile(self, key):
         """
         """
-        return self._bt.Object(key).get()
+        return self.s3.get_object(Bucket=self._bucketName, Key=key)
 
     def deleteFile(self, key):
         """
         """
-        self._bt.Object(key).delete()
+        self.s3.delete_object(Bucket=self._bucketName, Key=key)
 
     def deleteFilesFromDir(self, dirPath):
         """
         """
-        self._bt.delete_objects()
+        self.s3.delete_objects(Bucket=self._bucketName, Prefix=dirPath)
 
     def transferToLocalFile(self, key, localFile):
         """
         """
-        self._bt.download_file(key, localFile)
+        fd=open(localFile, "w")
+        self.s3.download_fileobj(self._bucketName, key, fd)
+        fd.close()
 
-    def uploadFile(self, fileData, key):
+    def uploadFileData(self, fileData, key):
         """
         """
-        self._bt.upload_fileobj(fileData, key)
-
-    def uploadData(self, blob, key):
-        """
-        """
-        self._bt.put_object(Key=key, Body=blob)
+        self.s3.upload_fileobj(fileData, self._bucketName, key)
 
 
 
