@@ -1,5 +1,5 @@
 from boto3.session import Session
-from botocore.client import ClientError
+from botocore.exceptions import ClientError, WaiterError
 
 
 class BasicSession:
@@ -118,24 +118,43 @@ class Ec2ByName(BasicSession):
             "Name": "tag:Name",
             "Values": [self.instance_name,]
          }]
-        reservations = self.ec2.describe_instances(Filters=filters)  
-        for reservation in (response["Reservations"]:
-            for instance in reservation["Instances"]:
-                tags=intance["Tags"]
-                for tagDict in tags:
-                    if tagDict["Key"]!="Name":continue
-                    if tagDict["Value"]!=instance_name:continue
-                    return True
-        return False
+        waiter=self.ec2.get_waiter("instance_exists") 
+        waiter.config.delay=3
+        waiter.config.max_attempts=1
+        #wait
+        try:
+            waiter.wait(Filters=filters)
+        except WaiterError:
+            return False
+        return True
 
     def create_instance(self, **kwargs):
         """
         image i.e. ami-aa5ebdd2
 
         """
-        instances = self.ec2.create_instances(**kwargs)
-        instance=instances[0]
-        instance.wait_until_running() 
-        instance.add_tag("Name", self.instance_name)
+        instances = self.ec2.run_instances(**kwargs)
+        instance=instances["Instances"][0]
+        #get id
+        insID=instance["InstanceId"]
+        #wait set up
+        waiter=self.ec2.get_waiter("instance_exists") 
+        waiter.config.delay=10
+        waiter.config.max_attempts=10
+        #wait
+        print("[+] Waiting on instance...")
+        waiter.wait(InstanceIds=[insID])
+
+        print("[+] Adding Tag Name: {}".format(self.instance_name))
+        bc2.ec2.create_tags(
+            Resources=[insID],
+            Tags=[
+                {
+                    "Key": "Name",
+                    "Value": self.instance_name,
+                }
+            ]
+        )
+        print("[+] Instance {} is ready.".format(self.instance_name))
         return instance
     
