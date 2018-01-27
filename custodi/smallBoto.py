@@ -110,6 +110,7 @@ class Ec2ByName(BasicSession):
         """
         """
         self.instance_name=instance_name
+        self.instance={}
 
     def exists(self):
         """
@@ -118,14 +119,12 @@ class Ec2ByName(BasicSession):
             "Name": "tag:Name",
             "Values": [self.instance_name,]
          }]
-        waiter=self.ec2.get_waiter("instance_exists") 
-        waiter.config.delay=3
-        waiter.config.max_attempts=1
-        #wait
-        try:
-            waiter.wait(Filters=filters)
-        except WaiterError:
-            return False
+        reservations=self.ec2.describe_instances(Filters=filters)
+        if not reservations or not reservations["Reservations"]:return False
+        instances=reservations["Reservations"][0]["Instances"]
+        if not instances:return False
+        print("[+] Found {} instance(s).".format(len(instances)))
+        self.instance=instances[0]
         return True
 
     def create_instance(self, **kwargs):
@@ -146,7 +145,7 @@ class Ec2ByName(BasicSession):
         waiter.wait(InstanceIds=[insID])
 
         print("[+] Adding Tag Name: {}".format(self.instance_name))
-        bc2.ec2.create_tags(
+        self.ec2.create_tags(
             Resources=[insID],
             Tags=[
                 {
@@ -156,5 +155,12 @@ class Ec2ByName(BasicSession):
             ]
         )
         print("[+] Instance {} is ready.".format(self.instance_name))
-        return instance
+        self.instance=instance
+    
+    @property
+    def publicIP(self):
+        """
+        """
+        return self.instance.get("PublicIpAddress")
+
     
