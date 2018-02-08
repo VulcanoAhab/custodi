@@ -180,10 +180,10 @@ class LambdaByName(BasicSession):
         """
         self.confs.update(confs)
 
-    def set_code_zip(self, code_zip):
+    def set_zip_content(self, zip_content):
         """
         """
-        self.code_zip=code_zip
+        self.zip_content=zip_content
 
     def create_lambda(self):
         """
@@ -191,6 +191,6 @@ class LambdaByName(BasicSession):
         self.lambda.create_function(**self.confs)
         self.lambda.update_function_code(
             FunctionName=self.lambda_name,
-            ZipFile=self.code_zip,
+            ZipFile=self.zip_content,
             Publish=True
         )
