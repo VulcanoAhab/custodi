@@ -129,7 +129,7 @@ class Ec2ByName(BasicSession):
 
     def create_instance(self, **kwargs):
         """
-        image i.e. ami-aa5ebdd2
+        image i.e. ami-55ef662f
 
         """
         instances = self.ec2.run_instances(**kwargs)
