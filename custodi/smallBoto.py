@@ -164,3 +164,33 @@ class Ec2ByName(BasicSession):
         return self.instance.get("PublicIpAddress")
 
     
+class LambdaByName(BasicSession):
+    """
+    """
+    _resource="lambda"
+    
+    def __init__(self, lambda_name):
+        """
+        """
+        self.lambda_name=lambda_name
+        self.confs={}
+    
+    def set_confs(self, **confs):
+        """
+        """
+        self.confs.update(confs)
+
+    def set_zip_content(self, zip_content):
+        """
+        """
+        self.zip_content=zip_content
+
+    def create_lambda(self):
+        """
+        """
+        self.lambda.create_function(**self.confs)
+        self.lambda.update_function_code(
+            FunctionName=self.lambda_name,
+            ZipFile=self.zip_content,
+            Publish=True
+        )
