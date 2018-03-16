@@ -43,7 +43,6 @@ class S3Bucket(BasicSession):
             self.s3.create_bucket(Bucket=self._bucketName)
         paginator = cls.s3.get_paginator("list_objects_v2")
         if not basePath:
-        
             pages = paginator.paginate(Bucket=self._bucketName)
         else:
             pages = paginator.paginate(Bucket=self._bucketName, Prefix=basePath)
@@ -98,6 +97,15 @@ class S3Bucket(BasicSession):
         """
         """
         self.s3.upload_fileobj(fileData, self._bucketName, key)
+    
+    def uploadJson(self, jsonObj, key):
+        """
+        """
+        obj_dump=json.dumps(jsonObj)
+        content=io.BytesIO()
+        content.write(obj_dump.encode())
+        content.seek(0)
+        self.uploadFileData(content, key)
 
 
 
