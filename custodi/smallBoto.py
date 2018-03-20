@@ -44,7 +44,7 @@ class S3Bucket(BasicSession):
             self.s3.head_bucket(Bucket=self._bucketName)
         except ClientError:
             self.s3.create_bucket(Bucket=self._bucketName)
-        paginator = cls.s3.get_paginator("list_objects_v2")
+        paginator = self.s3.get_paginator("list_objects_v2")
         if not basePath:
             pages = paginator.paginate(Bucket=self._bucketName)
         else:
@@ -199,8 +199,8 @@ class LambdaByName(BasicSession):
     def create_lambda(self):
         """
         """
-        self.lambda.create_function(**self.confs)
-        self.lambda.update_function_code(
+        self._lambda.create_function(**self.confs)
+        self._lambda.update_function_code(
             FunctionName=self.lambda_name,
             ZipFile=self.zip_content,
             Publish=True
