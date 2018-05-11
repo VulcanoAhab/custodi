@@ -207,7 +207,7 @@ class LambdaByName(BasicSession):
         )
 
 
-class RDS(BasicSession):
+class RDSPostgre(BasicSession):
     """
     """
     _resource="rds"
