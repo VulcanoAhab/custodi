@@ -18,7 +18,7 @@ class BasicSession:
         cls._region_name=region_name
 
     @classmethod
-    def basic_conn(cls, access_key, secret_key, 
+    def basic_conn(cls, access_key, secret_key,
                         use_ssl=True, region_name=None):
         """
         """
@@ -26,8 +26,8 @@ class BasicSession:
             region_name=cls._region_name
         session=Session(aws_access_key_id=access_key,
                         aws_secret_access_key=secret_key)
-        setattr(cls, cls._resource, session.client(cls._resource, 
-                                                    use_ssl=use_ssl, 
+        setattr(cls, cls._resource, session.client(cls._resource,
+                                                    use_ssl=use_ssl,
                                                     region_name=region_name))
 
 
@@ -50,7 +50,7 @@ class S3Bucket(BasicSession):
         else:
             pages = paginator.paginate(Bucket=self._bucketName, Prefix=basePath)
         self._files=(item["Key"] for item in pages.search("Contents"))
-        
+
     @property
     def files(self):
         """
@@ -100,7 +100,7 @@ class S3Bucket(BasicSession):
         """
         """
         self.s3.upload_fileobj(fileData, self._bucketName, key)
-    
+
     def uploadJson(self, jsonObj, key):
         """
         """
@@ -116,7 +116,7 @@ class Ec2ByName(BasicSession):
     """
     """
     _resource="ec2"
-    
+
     def __init__(self, instance_name):
         """
         """
@@ -126,7 +126,7 @@ class Ec2ByName(BasicSession):
     def exists(self):
         """
         """
-        filters = [{  
+        filters = [{
             "Name": "tag:Name",
             "Values": [self.instance_name,]
          }]
@@ -148,7 +148,7 @@ class Ec2ByName(BasicSession):
         #get id
         insID=instance["InstanceId"]
         #wait set up
-        waiter=self.ec2.get_waiter("instance_exists") 
+        waiter=self.ec2.get_waiter("instance_exists")
         waiter.config.delay=10
         waiter.config.max_attempts=10
         #wait
@@ -167,25 +167,25 @@ class Ec2ByName(BasicSession):
         )
         print("[+] Instance {} is ready.".format(self.instance_name))
         self.instance=instance
-    
+
     @property
     def publicIP(self):
         """
         """
         return self.instance.get("PublicIpAddress")
 
-    
+
 class LambdaByName(BasicSession):
     """
     """
     _resource="lambda"
-    
+
     def __init__(self, lambda_name):
         """
         """
         self.lambda_name=lambda_name
         self.confs={}
-    
+
     def set_confs(self, **confs):
         """
         """
@@ -205,3 +205,43 @@ class LambdaByName(BasicSession):
             ZipFile=self.zip_content,
             Publish=True
         )
+
+
+class RDS(BasicSession):
+    """
+    """
+    _resource="rds"
+
+    def __init__(self, dataBase):
+        """
+        """
+        self.dataBase=dataBase
+        self.confs={}
+
+    def create_db(self, username, passWord):
+        """
+        """
+        try:
+            self.rds.create_db_instance(
+                DBInstanceIdentifier=db_identifier,
+                AllocatedStorage=200,
+               DBName=self.dataBase,
+               Engine='postgres',
+               # General purpose SSD
+               StorageType='gp2',
+               StorageEncrypted=True,
+               AutoMinorVersionUpgrade=True,
+               # Set this to true later?
+               MultiAZ=False,
+               MasterUsername=username,
+               MasterUserPassword=passWord,
+               VpcSecurityGroupIds=[self.confs["securityGroup"],]
+               DBInstanceClass=self.confs["dbType"],
+               Tags=self.confs["tags"]
+               )
+            print ("Starting RDS instance with ID: {}".format(db_identifier))
+    except botocore.exceptions.ClientError as e:
+        if 'DBInstanceAlreadyExists' in e.message:
+            print 'DB instance %s exists already, continuing to poll ...' % db_identifier
+        else:
+            raise
