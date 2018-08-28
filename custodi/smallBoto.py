@@ -235,13 +235,13 @@ class RDSPostgre(BasicSession):
                MultiAZ=False,
                MasterUsername=username,
                MasterUserPassword=passWord,
-               VpcSecurityGroupIds=[self.confs["securityGroup"],]
+               VpcSecurityGroupIds=[self.confs["securityGroup"],],
                DBInstanceClass=self.confs["dbType"],
                Tags=self.confs["tags"]
                )
             print ("Starting RDS instance with ID: {}".format(db_identifier))
-    except botocore.exceptions.ClientError as e:
-        if 'DBInstanceAlreadyExists' in e.message:
-            print 'DB instance %s exists already, continuing to poll ...' % db_identifier
-        else:
-            raise
+        except botocore.exceptions.ClientError as e:
+            if "DBInstanceAlreadyExists" in e.message:
+                print ("DB instance {} exists already, continuing to poll ...".format(db_identifier))
+            else:
+                raise Exception("[-] Fail to create DB: {}".format(str(e)))
