@@ -101,10 +101,10 @@ class S3Bucket(BasicSession):
         """
         self.s3.upload_fileobj(fileData, self._bucketName, key)
 
-    def uploadJson(self, jsonObj, key):
+    def uploadJson(self, jsonObj, key, jsonFnSerializer=None):
         """
         """
-        obj_dump=json.dumps(jsonObj)
+        obj_dump=json.dumps(jsonObj, default=jsonFnSerializer)
         content=io.BytesIO()
         content.write(obj_dump.encode())
         content.seek(0)
