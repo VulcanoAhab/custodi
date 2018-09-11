@@ -79,6 +79,13 @@ class S3Bucket(BasicSession):
         """
         return self.s3.get_object(Bucket=self._bucketName, Key=key)
 
+    def getJsonContent(self, key):
+        """
+        """
+        obj=self.s3.get_object(Bucket=self._bucketName, Key=key)
+        data=obj["Body"].read()
+        return json.loads(data.decode("uft-8"))
+
     def deleteFile(self, key):
         """
         """
