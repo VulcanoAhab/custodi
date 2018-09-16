@@ -72,7 +72,7 @@ class S3Bucket(BasicSession):
     def getFilesFromDir(self, dirPath):
         """
         """
-        return self.s3.list_objects(Prefix=dirPath)
+        return self.s3.list_objects(Bucket=self._bucketName, Prefix=dirPath)
 
     def getFile(self, key):
         """
