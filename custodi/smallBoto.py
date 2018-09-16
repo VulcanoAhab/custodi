@@ -72,7 +72,8 @@ class S3Bucket(BasicSession):
     def getFilesFromDir(self, dirPath):
         """
         """
-        return self.s3.list_objects(Bucket=self._bucketName, Prefix=dirPath)
+        pages = paginator.paginate(Bucket=self._bucketName, Prefix=basePath)
+        return (item["Key"] for item in pages.search("Contents"))
 
     def getFile(self, key):
         """
