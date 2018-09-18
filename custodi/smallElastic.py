@@ -66,7 +66,7 @@ class Basics:
         """
         #ignore 400 :: if already exists
         if "ignore" not in kwargs:kwargs.update({"ignore":400})
-        cls.indices.create(*args, **kwargs) 
+        cls.indices.create(*args, **kwargs)
 
     @classmethod
     def save(cls, doc_id, doc, index=None, docType=None):
@@ -90,6 +90,10 @@ class Basics:
         """
         if not scrollTime:
             scrollTime="1m"
+        if not index:
+            index=cls._index
+        if not docType:
+            docType=cls._docType
         firstHit=cls._conn.search(index=index, doc_type=docType,
                                   body=query, scroll=scrollTime)
         scrollIt=firstHit["_scroll_id"]
@@ -133,4 +137,4 @@ class Basics:
     def getAllbyIndex(cls, index):
         """
         """
-        cls.scroll({"query":{"match_all":{}}}, index=index) 
+        cls.scroll({"query":{"match_all":{}}}, index=index)
