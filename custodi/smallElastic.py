@@ -102,7 +102,7 @@ class Basics:
         #iter the rest
         while True:
             try:
-                manyHits=self._conn.scroll(scroll_id=scrollIt,
+                manyHits=cls._conn.scroll(scroll_id=scrollIt,
                                            scroll=scrollTime)
                 if not len(manyHits["hits"]["hits"]):break
                 for doc in manyHits["hits"]["hits"]:yield doc
