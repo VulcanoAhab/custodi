@@ -119,6 +119,13 @@ class S3Bucket(BasicSession):
         content.seek(0)
         self.uploadFileData(content, key)
 
+    def copyToNewBucket(self, sourceKey, newKey, newBucket, deleteSource=False):
+        """
+        """
+        copy_source = {"Bucket": self._bucketName, "Key": sourceKey}
+        self.s3.meta.client.copy(copy_source, newBucket, newKey)
+        if deleteSource:self.s3.deleteFile(sourceKey)
+
 
 
 class Ec2ByName(BasicSession):
