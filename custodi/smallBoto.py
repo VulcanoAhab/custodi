@@ -54,11 +54,10 @@ class S3Bucket(BasicSession):
         try:
             self.s3.head_bucket(Bucket=self._bucketName)
         except ClientError:
+            self.s3.create_bucket(Bucket=self._bucketName)
             if bucketType == "webiste":
                 self.s3.put_bucket_website(Bucket=self._bucketName,
                          WebsiteConfiguration=self._website_config)
-            else:
-                self.s3.create_bucket(Bucket=self._bucketName)
         paginator = self.s3.get_paginator("list_objects_v2")
         if not basePath:
             pages = paginator.paginate(Bucket=self._bucketName)
