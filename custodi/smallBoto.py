@@ -36,14 +36,29 @@ class S3Bucket(BasicSession):
     """
     _resource="s3"
 
-    def __init__(self, bucketName, basePath=None):
+    _website_config={
+        "ErrorDocument": {"Key": "error.html"},
+        "IndexDocument": {"Suffix": "index.html"},
+    }
+
+    @classmethod
+    def set_website_config(cls, configDict):
+        """
+        """
+        cls._website_config=configDict
+
+    def __init__(self, bucketName, basePath=None, bucketType="default"):
         """
         """
         self._bucketName=bucketName
         try:
             self.s3.head_bucket(Bucket=self._bucketName)
         except ClientError:
-            self.s3.create_bucket(Bucket=self._bucketName)
+            if bucketType == "webiste":
+                self.s3.put_bucket_website(Bucket=self._bucketName,
+                         WebsiteConfiguration=self._website_config)
+            else:
+                self.s3.create_bucket(Bucket=self._bucketName)
         paginator = self.s3.get_paginator("list_objects_v2")
         if not basePath:
             pages = paginator.paginate(Bucket=self._bucketName)
@@ -242,9 +257,9 @@ class RDSPostgre(BasicSession):
                 DBInstanceIdentifier=db_identifier,
                 AllocatedStorage=200,
                DBName=self.dataBase,
-               Engine='postgres',
+               Engine="postgres",
                # General purpose SSD
-               StorageType='gp2',
+               StorageType="gp2",
                StorageEncrypted=True,
                AutoMinorVersionUpgrade=True,
                # Set this to true later?
