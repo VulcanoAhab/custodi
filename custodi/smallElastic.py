@@ -152,7 +152,7 @@ class Basics:
         _docs_iterator=cls.scroll(
                     query={'query':{"match_all":{}}},
                     index=index, docType=docType,
-                    scrollTime=scrollTime):
+                    scrollTime=scrollTime)
         for doc in _docs_iterator:
             _bucket.append(doc)
             if len(_bucket) > bucketSize:
