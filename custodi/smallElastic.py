@@ -1,4 +1,4 @@
-import utils
+from . import utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch,RequestsHttpConnection
 
