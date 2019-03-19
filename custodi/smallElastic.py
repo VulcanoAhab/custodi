@@ -1,3 +1,4 @@
+import utils
 from aws_requests_auth.aws_auth import AWSRequestsAuth
 from elasticsearch import Elasticsearch,RequestsHttpConnection
 
@@ -74,6 +75,7 @@ class Basics:
         """
         if not index:
             index=cls._index
+            if not index:raise Exception("[-] Setting index is required")
         if not docType:
             docType=cls._docType
         cls._conn.index(index=index,doc_type=docType,
@@ -92,6 +94,7 @@ class Basics:
             scrollTime="1m"
         if not index:
             index=cls._index
+            if not index:raise Exception("[-] Setting index is required")
         if not docType:
             docType=cls._docType
         firstHit=cls._conn.search(index=index, doc_type=docType,
@@ -138,3 +141,23 @@ class Basics:
         """
         """
         cls.scroll({"query":{"match_all":{}}}, index=index)
+
+    @classmethod
+    def backupByIndex(cls, outputFile, index=None, docType=None,
+                        scrollTime=None, bucketSize=100):
+        """
+        """
+        _bucket=[]
+        _bucket_count=1
+        _docs_iterator=cls.scroll(
+                    query={'query':{"match_all":{}}},
+                    index=index, docType=docType,
+                    scrollTime=scrollTime):
+        for doc in _docs_iterator:
+            _bucket.append(doc)
+            if len(_bucket) > bucketSize:
+                utils._save_bucket(outputFile+"_"+_bucket_count, _bucket)
+                _bucket_count+=1
+                _bucket=[]
+        if not len(_bucket):return
+        utils._save_bucket(outputFile+"_"+_bucket_count, _bucket)
