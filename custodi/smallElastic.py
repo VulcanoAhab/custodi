@@ -156,8 +156,8 @@ class Basics:
         for doc in _docs_iterator:
             _bucket.append(doc)
             if len(_bucket) > bucketSize:
-                utils._save_bucket(outputFile+"_"+_bucket_count, _bucket)
+                utils._save_bucket(outputFile+"_"+str(_bucket_count), _bucket)
                 _bucket_count+=1
                 _bucket=[]
         if not len(_bucket):return
-        utils._save_bucket(outputFile+"_"+_bucket_count, _bucket)
+        utils._save_bucket(outputFile+"_"+str(_bucket_count), _bucket)
